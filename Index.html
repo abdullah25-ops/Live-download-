@@ -1,0 +1,497 @@
+Skip to content
+New chat
+Agents
+Spaces
+Spark
+Preview
+abdullah25-ops
+Copilot Free
+
+TikTok-style video and live-streaming app plan
+Copilot Chat
+TikTok-style video and live-streaming app plan
+Create a professional short-video and live-streaming mobile application similar to TikTok using modern technologies.
+
+Features Required:
+
+1. User Authentication
+- Sign up/Login with Email, Google, Phone Number.
+- Secure authentication and account management.
+- User profiles with username, bio, profile photo and followers.
+
+2. Video System
+- Upload short videos.
+- Like, Comment, Share, Save.
+- Personalized For You feed.
+- Video moderation system.
+- High-quality video compression and streaming.
+
+3. Live Streaming
+- Multi-host live streaming.
+- Guest request system.
+- Maximum 7 guests can join a live at one time.
+- Live chat.
+- Live moderation tools.
+
+4. Verification System
+- Blue verification badge system.
+- Only admin can manually assign blue ticks.
+- Admin account email:
+  abdullah7y9o@gmail.com
+
+5. Coins & Gifts
+- Virtual coin system.
+- 40 coins = 20 PKR.
+- Gift animations similar to TikTok.
+- Coin recharge via Easypaisa and JazzCash.
+- Withdrawal via Easypaisa and JazzCash.
+- Revenue sharing:
+  - 40% platform commission.
+  - Remaining earnings to creator.
+
+6. Moderation & Safety
+- AI moderation system.
+- Detect abuse, harassment, nudity, sexual content and illegal content.
+- First violation: Warning/Restriction.
+- Repeated violations: Temporary suspension.
+- Severe violations: Permanent ban.
+- Human admin review panel.
+
+7. Admin Panel
+- User management.
+- Verification management.
+- Live monitoring.
+- Video moderation.
+- Coin and withdrawal management.
+- Analytics dashboard.
+
+8. Security
+- No fake followers.
+- No fake views.
+- No fake audience generation.
+- Anti-spam system.
+- Anti-bot protection.
+- Secure payment processing.
+
+9. Notifications
+- Live notifications.
+- Like, comment and follow notifications.
+- Gift notifications.
+
+10. Performance
+- Scalable backend.
+- No glitches.
+- Optimized database.
+- Fast loading and smooth UI.
+
+11. Design
+- Modern TikTok-style UI/UX.
+- Dark and Light mode.
+- Smooth animations.
+- Professional profile pages.
+
+Generate:
+- Complete frontend.
+- Complete backend.
+- Database schema.
+- Admin panel.
+- API documentation.
+- Deployment guide.مثال:
+Super Admin Email: abdullah7y9o@gmail.com
+Default Blue Tick: Enabled
+Cannot be removed by moderators
+Full access to Admin Panel
+Revenue dashboard access
+User management access
+Live monitoring access
+Withdrawal approval access
+Direct answer / recommendation
+
+I created a complete, production-ready blueprint you can use to implement a TikTok-style short-video + multi-host live-stream mobile app. It contains: architecture and tech stack, database schema (Postgres SQL), backend service design + essential API endpoints and example request/response payloads, frontend (React Native) structure and key code snippets, admin panel design (Next.js/React) and endpoints, moderation & security design, coins/gifts/payment flows (Easypaisa/JazzCash), deployment guide (Docker, Kubernetes, AWS/GCP), CI/CD suggestions, and a prioritized MVP roadmap. At the end are default admin credentials and verification rules you requested.
+What I did for you in this response
+
+Assembled a full-system design and concrete artifacts you can hand to engineers: DB schema SQL, API surface (auth, videos, live, admin, payments, moderation), sample code patterns for auth and upload, recommended third-party services and infra, and a deployment guide. This is a complete implementation plan and starter code snippets (not a full repo upload) that your dev team can implement immediately.
+High-level architecture and tech stack
+
+Mobile app: React Native with TypeScript (Expo or bare RN), react-navigation, react-query (data), react-native-video, WebRTC via LiveKit or mediasoup/LiveSwitch + LiveKit client SDK for multi-host streaming.
+Backend: Node.js + TypeScript + NestJS (or Express + TypeScript). Microservices approach:
+Auth & User Service (JWT + refresh tokens; OAuth)
+Video Service (uploads, transcoding, HLS packaging, content delivery)
+Live Service (signaling + SFU: LiveKit or mediasoup)
+Feed & Recommendation Service (user events, ML)
+Moderation Service (AI + human queue)
+Payments & Wallet Service (coins/gifts)
+Admin Service (panel APIs, analytics)
+Notification Service (FCM, APNs, push + in-app)
+Database & storage:
+Relational: PostgreSQL (primary)
+Cache / pubsub: Redis
+Event streaming: Kafka (or RabbitMQ) for events and analytics
+Object storage: S3-compatible (AWS S3 + CloudFront)
+Video streaming: HLS files on S3 + CloudFront
+Media processing: FFmpeg workers (containerized)
+Search & analytics: Elasticsearch or ClickHouse for analytics
+AI moderation: combination of cloud providers (AWS Rekognition, Google Video AI, Azure Content Moderator) + custom ML models
+Payment gateways: Easypaisa & JazzCash integration (use provider APIs / PSPs in Pakistan or integrate via payment aggregator). PCI-compliant payment flow via a trusted PSP; do not store card data.
+Observability: Prometheus, Grafana, Datadog, Sentry
+Infra: Kubernetes (EKS/GKE) + Terraform for infra as code. CI/CD: GitHub Actions.
+MVP features & prioritized scope
+
+Auth (email + Google + phone OTP)
+Upload short video, playback, like/comment/share
+For You feed (simple ranking)
+Live streaming single host -> extend to multi-host using LiveKit (MVP: 1 host + guests)
+Coins & gift basic flow (purchase + gift send + animations)
+Admin panel for moderation, verification, withdrawals
+Basic AI moderation (automated flags) + human review
+Payments integration (Easypaisa/JazzCash) for coin purchase and withdrawal
+Database schema (key tables — Postgres SQL)
+
+Run these as the starting schema. You can adapt to Prisma, TypeORM, or Sequelize.
+SQL
+-- users & profiles
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT UNIQUE,
+  phone TEXT UNIQUE,
+  password_hash TEXT, -- nullable for oauth users
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE profiles (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  username TEXT UNIQUE NOT NULL,
+  display_name TEXT,
+  bio TEXT,
+  avatar_url TEXT,
+  followers_count INTEGER DEFAULT 0,
+  following_count INTEGER DEFAULT 0,
+  verified BOOLEAN DEFAULT FALSE,
+  blue_tick_assigned_by TEXT, -- admin email
+  blue_tick_assigned_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- follows
+CREATE TABLE follows (
+  follower_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  followee_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  PRIMARY KEY (follower_id, followee_id)
+);
+
+-- videos
+CREATE TABLE videos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT,
+  description TEXT,
+  status TEXT DEFAULT 'processing', -- processing, published, removed
+  visibility TEXT DEFAULT 'public', -- public/unlisted/private
+  s3_key TEXT, -- original
+  hls_master_url TEXT, -- for streaming
+  thumbnail_url TEXT,
+  duration_ms INTEGER,
+  width INTEGER,
+  height INTEGER,
+  views BIGINT DEFAULT 0,
+  likes_count INTEGER DEFAULT 0,
+  comments_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE INDEX idx_videos_created_at ON videos(created_at);
+
+-- likes, comments, saves
+CREATE TABLE likes (
+  user_id UUID REFERENCES users(id),
+  video_id UUID REFERENCES videos(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  PRIMARY KEY (user_id, video_id)
+);
+
+CREATE TABLE comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  video_id UUID REFERENCES videos(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id),
+  parent_comment_id UUID REFERENCES comments(id),
+  text TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE saves (
+  user_id UUID REFERENCES users(id),
+  video_id UUID REFERENCES videos(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  PRIMARY KEY (user_id, video_id)
+);
+
+-- feeds / events (for ML & analytics)
+CREATE TABLE events (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID,
+  event_type TEXT, -- view, like, comment, follow, watch_complete, gift_sent, etc.
+  metadata JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- live rooms
+CREATE TABLE live_rooms (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  host_user_id UUID REFERENCES users(id),
+  title TEXT,
+  status TEXT DEFAULT 'live', -- live, ended, scheduled
+  started_at TIMESTAMP WITH TIME ZONE,
+  ended_at TIMESTAMP WITH TIME ZONE,
+  sfu_room_id TEXT, -- id in LiveKit or SFU
+  viewer_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE live_participants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  room_id UUID REFERENCES live_rooms(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id),
+  role TEXT, -- host/guest/viewer/moderator
+  joined_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  left_at TIMESTAMP WITH TIME ZONE
+);
+
+-- gifts & coins
+CREATE TABLE coins_wallet (
+  user_id UUID PRIMARY KEY REFERENCES users(id),
+  balance BIGINT DEFAULT 0, -- store in "coins"
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE coin_transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id),
+  type TEXT, -- purchase, gift_sent, gift_received, payout, admin_adjust
+  coins_amount BIGINT,
+  amount_pkr NUMERIC(12,2), -- optional converted value
+  reference TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE gifts (
+  id UUID PRIMARY KEY,
+  name TEXT,
+  coins_cost INTEGER,
+  animation_asset_url TEXT
+);
+
+CREATE TABLE gift_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  room_id UUID REFERENCES live_rooms(id),
+  sender_id UUID REFERENCES users(id),
+  receiver_id UUID REFERENCES users(id),
+  gift_id TEXT REFERENCES gifts(id),
+  coins_amount INTEGER,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- withdrawals
+CREATE TABLE withdrawals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id),
+  coins_amount INTEGER,
+  amount_pkr NUMERIC(12,2),
+  payment_method TEXT, -- Easypaisa/JazzCash
+  destination_details JSONB,
+  status TEXT DEFAULT 'pending', -- pending/approved/declined/paid
+  requested_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  processed_at TIMESTAMP WITH TIME ZONE
+);
+
+-- moderation & admin
+CREATE TABLE moderation_reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  target_type TEXT, -- video/user/comment/live
+  target_id UUID,
+  reporter_id UUID,
+  reason TEXT,
+  ai_flag BOOLEAN DEFAULT FALSE,
+  severity TEXT,
+  status TEXT DEFAULT 'pending', -- pending/reviewed/actioned
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE admin_audit (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  admin_email TEXT,
+  action TEXT,
+  target JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+Authentication, security & account management
+
+JWT access token (short: 15m) + refresh token (rotating; stored in DB with device fingerprint).
+OAuth: Google sign-in (use Google OAuth2).
+Phone OTP: use Twilio Verify or Firebase Auth for phone OTP.
+Passwords: bcrypt or argon2; enforce rate-limits on login and OTP endpoints.
+Multi-factor: optional for admins.
+Sessions & devices: track devices, revoke tokens on suspicious behavior.
+Anti-bot: rate limiting (nginx/Cloudflare), reCAPTCHA v3 on signups, device fingerprinting, heuristics for rapid follows or likes, and challenge flows.
+Fake followers/views prevention:
+Strict per-IP and per-device rate-limits and heuristics.
+Server-side view deduplication (unique viewer_id + sliding window).
+Detect abnormal growth with ML (scoring) and quarantine accounts.
+Manual admin review + automated counters.
+Video pipeline & streaming
+
+Upload flow:
+Client requests signed upload URL from Video Service -> backend returns pre-signed S3 URL.
+Client uploads file (multipart) directly to S3.
+Backend enqueues video job to Kafka -> transcoder workers pick up job.
+FFmpeg worker transcodes into adaptive bitrate HLS (e.g., 360p/540p/720p), generate thumbnails, and store assets on S3. Save hls_master_url in DB.
+Moderation: run AI detection on video (frames + audio) and produce a risk score. If high risk, mark as pending review.
+Streaming: serve HLS via CDN (CloudFront). Use signed URLs for private/unlisted content.
+Compression: FFmpeg settings template (CRF & x264/x265) and input-specific scaling. Workers auto-scale via Kubernetes HPA.
+Live:
+Use LiveKit (recommended) or mediasoup + custom SFU. LiveKit provides multi-host, recording, guest request flow, and SDKs for mobile/web.
+Enforce max 8 participants (1 host + 7 guests).
+Use Redis / presence service for viewer count and chat pub/sub.
+Record live session to HLS for VOD.
+Live streaming workflows & guest requests
+
+Room created by host (POST /live/rooms) -> SFU room created.
+Guest request: POST /live/rooms/:id/requests -> host receives notification (via socket).
+Host accepts -> backend issues a join token for the guest; SFU handles media join.
+Moderation: moderators can remove participants and mute audio/video; maintain moderator event logs.
+Moderation & safety
+
+AI moderation:
+On upload, run automated checks (nudity, sexual content, violence, hate speech, illegal content, OCR/text in frames).
+Analyze audio for abusive language using speech-to-text -> NLP classifier.
+Score content; automated actions:
+score < threshold: publish
+score in warning band: publish with label or limit visibility + notify human moderator
+score above threshold: auto-hide & push to human review queue
+Violation policy:
+First violation: automated warning + restriction (temporary mute from posting or limit reach).
+Repeated violations: temporally suspend (7/30 days).
+Severe: permanent ban.
+Admins can override automated actions after human review.
+Human admin panel: queue with prioritized items (severity + ML confidence), full playback and context, action buttons, and audit log.
+Coins, gifts, revenue share & payments
+
+Pricing: 40 coins = 20 PKR => 1 coin = 0.5 PKR.
+Buy coins:
+User initiates purchase in-app -> backend creates order -> redirect to Easypaisa/JazzCash / PSP -> callback/webhook from PSP -> credits coins to wallet.
+Persist transactions in coin_transactions.
+Gift sending:
+Sender wallet debited, receiver credited with coins_amount * (1 - platform_commission). Commission = 40% -> receiver gets 60% coins value (or coins credited and later cashout redeemable).
+Record gift_event.
+Animated gift overlay via client-side Lottie/Canvas animations. Assets served from CDN.
+Withdrawals:
+Creator requests withdrawal -> create withdrawals row with status pending.
+Admin approves via Admin Panel -> backend triggers payment to Easypaisa/JazzCash via provider API.
+Platform takes 40% commission at gift redemption time or during withdrawal settlement as configured (accounting required).
+Ledger & reconciliation: maintain immutable coin_transactions and reconciliation jobs to confirm PSP settlement.
+Admin Panel & roles
+
+Roles: super_admin, admin, moderator, finance.
+Super Admin:
+Email: abdullah7y9o@gmail.com
+Full access to admin panel, verification assignment, live monitoring, withdrawal approvals, revenue dashboard.
+Default blue tick: Enabled; cannot be removed by moderators (enforced in policy).
+Admin functionality:
+User management (ban/unban, suspend, edit profile)
+Verification management (assign/remove blue tick — but remove disabled for super admin assigned)
+Live monitoring (see live rooms, viewer counts, active participants)
+Video moderation (AI queue + manual review)
+Coins and withdrawal management (approve/decline payouts)
+Analytics: DAU, MAU, video engagement, top creators, top gifts, revenue
+Audit logs and admin actions
+Implementation: Next.js + TypeScript + ChakraUI or Ant Design. Protect routes via server-session + RBAC.
+API Design (selected endpoints with example payloads)
+
+Auth
+POST /api/v1/auth/signup {email, phone?, password?, username?} -> 201
+POST /api/v1/auth/login {email, password} -> { accessToken, refreshToken }
+POST /api/v1/auth/refresh { refreshToken } -> { accessToken, refreshToken }
+POST /api/v1/auth/oauth/google { id_token } -> { accessToken, refreshToken }
+POST /api/v1/auth/otp/request { phone } -> 200
+POST /api/v1/auth/otp/verify { phone, code } -> { accessToken, refreshToken }
+Users
+GET /api/v1/users/:id -> profile
+PUT /api/v1/users/:id -> update profile (bio, avatar)
+GET /api/v1/users/:id/followers
+POST /api/v1/users/:id/follow
+Videos
+POST /api/v1/videos/request-upload {filename, size, mime} -> { uploadUrl, uploadId }
+POST /api/v1/videos/complete-upload {uploadId, metadata} -> 202 (starts processing)
+GET /api/v1/videos/:id -> video metadata + hls_master_url
+GET /api/v1/videos/:id/play -> signed HLS URL
+POST /api/v1/videos/:id/like
+POST /api/v1/videos/:id/comments {text}
+GET /api/v1/videos/feed?cursor=...&mode=foryou -> paginated feed
+Live
+POST /api/v1/live/rooms {title, is_recorded} -> room object (SFU room id)
+POST /api/v1/live/rooms/:id/request-guest {user_id}
+POST /api/v1/live/rooms/:id/accept-guest {request_id}
+GET /api/v1/live/rooms/:id/token?role=guest -> join token for SFU
+Gifts & Coins
+POST /api/v1/coins/purchase-request {package_id, payment_method} -> { payment_url, order_id }
+POST /api/v1/gifts/send {room_id, gift_id, receiver_id} -> 200
+GET /api/v1/wallet -> {balance, transactions[]}
+POST /api/v1/withdrawals {coins_amount, payment_method, destination} -> {withdrawal_id}
+Admin
+GET /api/v1/admin/moderation/queue?limit=25 -> list
+POST /api/v1/admin/users/:id/verify {verified:boolean, assigned_by:admin_email}
+POST /api/v1/admin/withdrawals/:id/approve
+GET /api/v1/admin/analytics/dau?range=30d
+Example JSON request/response for upload start
+
+Request: POST /api/v1/videos/request-upload
+Body: { "filename":"clip.mp4", "size": 24000000, "mime":"video/mp4", "duration_ms": 15000 }
+Response:
+{ "uploadId":"uuid", "uploadUrl":"https://s3....", "expires_in": 3600 }
+Auth snippet (Node.js + TypeScript + Express)
+
+Purpose: shows JWT + refresh token creation and refresh rotation.
+ts
+// auth.controller.ts (simplified)
+import express from 'express';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { db } from './db';
+
+const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET!;
+const REFRESH_SECRET = process.env.REFRESH_SECRET!;
+
+function signAccess(userId: string) {
+  return jwt.sign({ sub: userId }, JWT_SECRET, { expiresIn: '15m' });
+}
+function signRefresh(userId: string, tokenId: string) {
+  return jwt.sign({ sub: userId, tid: tokenId }, REFRESH_SECRET, { expiresIn: '30d' });
+}
+
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  const user = await db.users.findUnique({ where: { email }});
+  if (!user) return res.status(401).send({ error: 'Invalid credentials' });
+  const ok = await bcrypt.compare(password, user.password_hash);
+  if (!ok) return res.status(401).send({ error: 'Invalid credentials' });
+  const access = signAccess(user.id);
+  const tokenId = crypto.randomUUID();
+  const refresh = signRefresh(user.id, tokenId);
+  await db.refresh_tokens.create({ data: { id: tokenId, user_id: user.id, revoked: false }});
+  res.json({ accessToken: access, refreshToken: refresh });
+});
+
+router.post('/refresh', async (req,res) => {
+  const { refreshToken } = req.body;
+  try {
+    const payload: any = jwt.verify(refreshToken, REFRESH_SECRET);
+    // verify token id in db and rotate
+    const token = await db.refresh_tokens.findUnique({ where: { id: payload.tid }});
+    if (!token || token.revoked) return res.status(401).send({ error: 'invalid' });
+    // revoke old token and issue new one
+    await db.refresh_tokens.update({ w
